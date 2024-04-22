@@ -17,6 +17,11 @@ if ifc_filepath:
         for wall_type in model.by_type("IfcWallType"):
             st.write(f"Type de mur : {wall_type.Name}")
 
+        # Exemple : Obtenir tous les product
+        st.subheader("Exemple : Obtenir tous les ifcproduct)
+        for p in model.by_type("IfcProduct"):
+            st.write(f"Instance : {p.Name}")
+
         # Exemple : Obtenir toutes les occurrences de portes d'un type
         st.subheader("Exemple : Obtenir toutes les occurrences de portes d'un type")
         for door_type in model.by_type("IfcDoorType"):
@@ -36,6 +41,6 @@ if ifc_filepath:
         st.subheader("Exemple : Obtenir les propriétés d'un type de mur")
         psets = ifcopenshell.util.element.get_psets(wall_type)
         st.write(psets)
-
+        
     except FileNotFoundError:
         st.error("Fichier IFC introuvable. Veuillez vérifier le chemin du fichier.")
