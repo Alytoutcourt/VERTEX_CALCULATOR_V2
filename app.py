@@ -1,6 +1,8 @@
 import streamlit as st
+import pandas as pd
 import ifcopenshell
 import ifcopenshell.geom
+import ifcopenshell.util.shape
 import multiprocessing
 
 def main():
@@ -18,31 +20,28 @@ def main():
     # Configuration des paramètres pour la géométrie
     settings = ifcopenshell.geom.settings()
 
-    # Création d'un itérateur pour extraire la géométrie
-    Element = ifc_file.by_type('IfcProduct')
-    iterator = ifcopenshell.geom.iterator(settings, ifc_file, multiprocessing.cpu_count(), include=Element)
-    # Initialisation de l'itérateur
-    if iterator.initialize():
-        verts_list = []
+    # Récupération de tous les produits dans le fichier IFC
+    products = ifc_file.by_type('IfcElement')
 
-        # Parcours de la géométrie
-        while True:
-            shape = iterator.get()
-            if shape is None:
-                break
-            
-            # Récupération des sommets
-            verts = shape.geometry.verts
+    # Création d'un DataFrame pour les informations sur les produits
+    product_info = []
+    for product in products:
+        product_name = product.Name
+        product_guid = product.GlobalId
+        product_id = product.id()
 
-            # Ajout des informations à la liste respective
-            verts_list.extend(verts)
+        # Recherche des entités géométriques associées à ce produit
+        product_geom = ifcopenshell.geom.create_shape(settings, product)
+        verts_count = 0
+        grouped_verts = ifcopenshell.util.shape.get_vertices(product_geom.geometry)
+        verts_count += len(grouped_verts)
+        product_info.append((product_name, product_id.__str__(), product_guid, verts_count))
 
-            if not iterator.next():
-                break
+    df = pd.DataFrame(product_info, columns=["Nom","Id", "GUID", "Nombre de VERTEX"])
 
-        # Affichage des informations dans un tableau
-        st.write("### Sommets")
-        st.write(len(verts_list))
+    # Affichage du DataFrame dans un tableau interactif
+    st.write("### Informations sur les produits:")
+    st.dataframe(df)
 
 if __name__ == "__main__":
     main()
